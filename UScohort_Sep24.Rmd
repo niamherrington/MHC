@@ -1,0 +1,400 @@
+---
+title: "MHQ US cohort overview"
+author: "Niamh Errington"
+date: "`r format(Sys.time(), '%d %B %Y')`" 
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+#load libraries & read in data
+library(readr)
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(data.table)
+library(kableExtra)
+library(ggstats)
+library(janitor)
+
+source("OrderFactorsSep24.R")
+source("UsefulFunctionUS.R")
+
+US_1st <- US_1st %>% left_join(., QuestionKey, by = c("Question" = "Identifier"))
+
+# Fill in missing values in Sheet based on the value in identifier
+US_1st <- US_1st %>%
+  mutate(Sheet = case_when(is.na(Sheet) & Question %in% c('cannabisSmoking', 'cannabisVaping', 'currentSmoking', 'currentVaping', 'everQuitSmoking', 'pastSmokeless', 'pastVaping', 'tobaccoProducts', 'tobaccoProductsEver', 'everQuitSmokeless', 'everQuitVaping', 'lastCannabisSmoking', 'pastCannabisSmoking', 'lastCannabisVaping', 'pastCannabisVaping') ~ "Vaping_Smoking",   
+    is.na(Sheet) & Question %in% c('NonIdentifiableDemographics.patientHeightInches', 'regionInformation.countryCode', 'NonIdentifiableDemographics.patientBloodType' ) ~ "DEMOGRAPHICS",   
+     is.na(Sheet) & Question %in% c( 'heartAgeDataBloodGlucose_unit', 'heartAgeDataDiastolicBloodPressure', 'heartAgeDataDiastolicBloodPressure_unit', 'heartAgeDataHdl_unit', 'heartAgeDataSystolicBloodPressure_unit', 'heartAgeDataTotalCholesterol_unit') ~ "APH HEART AGE SURVEY",   
+    TRUE ~ Sheet                           # Keep original value if no conditions match
+  ))
+```
+
+# Days in study
+
+```{r}
+US_pats %>% ggplot(aes(x= dayInStudy)) + geom_histogram(bins = 50) + theme_bw() + ggtitle("Histogram of all days in study questions answered from US cohort")
+
+US_1st %>% ggplot(aes(x= dayInStudy)) + geom_histogram(bins = 50) + theme_bw() + ggtitle("Histogram of 1st answer days in US cohort (all questions)")
+
+US_1st %>% ggplot(aes(x = group, fill = group)) + geom_bar() + theme_bw() + ggtitle("Number of answers per group") + scale_fill_manual(values = c("deeppink", "midnightblue", "cornflowerblue"))
+
+US_1st %>% ggplot(aes(x = group, fill = Sheet)) + geom_bar() + theme_bw() + ggtitle("Number of answers per group") 
+
+```
+
+# Illness Mindset
+
+```{r}
+selectedillness <- US_1stWide %>% dplyr::select(all_of(variable_list_illnessmindset$Identifier), group)  %>% filter(!is.na(group))
+
+colnames(selectedillness) <- c(variable_list_illnessmindset$Prompt, "Group")
+
+kable(FreqWPerc(US_1stWide, body_self_healing_in_many_different_circumstances, group), caption = "Your body can heal itself on its own in many different circumstances.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_impact, group), caption = "Chronic illness negatively impacts nearly all parts of life.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_meaning, group), caption = "Having a chronic illness means that your body isn’t doing its job.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_coping, group), caption = "Your body is able to cope with a chronic illness.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_positive_opportunity, group), caption = "A chronic illness can be an opportunity to make positive life changes.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_management, group), caption = "A chronic illness is manageable.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_betrayal, group), caption = "If you have a chronic illness, it means your body has betrayed you.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_more_meaning_in_life, group), caption = "Having a chronic illness allows you to find more meaning in life.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_handling, group), caption = "A chronic illness is something that can be dealt with.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, body_remarkable_self_healing, group), caption = "In general, your body has remarkable self-healing properties.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_spoil, group), caption = "Having a chronic illness spoils many parts of life.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_challenge, group), caption = "Having a chronic illness is a challenge that can make you stronger.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_handling, group), caption = "In general, your body is able to handle a chronic illness.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_runing_life, group), caption = "A chronic illness ruins most aspects of life.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_management, group), caption = "Your body is designed to deal with and manage chronic illnesses.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_relatively_normal_life, group), caption = "You can live a relatively normal life with a chronic illness.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_failure, group), caption = "Having a chronic illness means that your body has failed.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_empowering, group), caption = "Fighting a chronic illness can be empowering.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, body_self_healing_from_most_conditions_and_diseases, group), caption = "Your body is able to heal itself from most conditions and diseases.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, chronic_illness_body_blame, group), caption = "Your body is to blame if you have a chronic illness.") %>% kable_styling(full_width = TRUE)
+```
+
+```{r}
+#svg, 1200x630
+selectedillness%>% gglikert(., `Your body can heal itself on its own in many different circumstances.`:`Your body is to blame if you have a chronic illness.`, facet_cols = vars(Group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+```
+
+# Exercise process mindset
+
+## First response, comparison 1
+
+```{r}
+kable(FreqWPerc(US_1stWide, easy, group), caption = "Exercising is: easy") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, pleasurable, group), caption = "Exercising is: pleasurable") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, relaxing, group), caption = "Exercising is: relaxing") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, convenient, group), caption = "Exercising is: convenient") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, fun, group), caption = "Exercising is: fun") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, social, group), caption = "Exercising is: social") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, indulgent, group), caption = "Exercising is: indulgent") %>% kable_styling(full_width = TRUE)
+
+```
+
+## Figures
+
+```{r}
+#1000 x 150 svg
+US_1stWide %>% dplyr::select(easy, group)   %>% dplyr::rename("Exercising is easy" = easy) %>% gglikert(., `Exercising is easy`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(relaxing, group)  %>% dplyr::rename("Exercising is relaxing" = relaxing) %>% gglikert(., `Exercising is relaxing`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(social, group)  %>% dplyr::rename("Exercising is social" = social) %>% gglikert(., `Exercising is social`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(indulgent, group)  %>% dplyr::rename("Exercising is indulgent" = indulgent) %>% gglikert(., `Exercising is indulgent`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(pleasurable, group)  %>% dplyr::rename("Exercising is pleasurable" = pleasurable) %>% gglikert(., `Exercising is pleasurable`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(convenient, group)  %>% dplyr::rename("Exercising is convenient" = convenient) %>% gglikert(., `Exercising is convenient`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(fun, group)  %>% dplyr::rename("Exercising is fun" = fun) %>% gglikert(., `Exercising is fun`, sort = "ascending", facet_cols = vars(group), add_labels = FALSE) 
+```
+
+```{r}
+exercise_all <- US_1stWide %>% dplyr::select(healthCode, variable_list_exproc$Identifier, group) %>% mutate(easy = dplyr::recode(easy, "Very difficult" = "Strongly disagree", "Somewhat difficult" = "Disagree", "Somewhat easy" = "Agree", "Very easy" = "Strongly agree"),                                                                                                   pleasurable = dplyr::recode(pleasurable, "Very unpleasant" = "Strongly disagree", "Somewhat unpleasant" = "Disagree", "Somewhat pleasurable" = "Agree", "Very pleasurable" = "Strongly agree"),                                                                                               relaxing = dplyr::recode(relaxing, "Very stressful" = "Strongly disagree", "Somewhat stressful" = "Disagree", "Somewhat relaxing" = "Agree", "Very relaxing" = "Strongly agree"),
+                   convenient = dplyr::recode(convenient, "Very inconvenient" = "Strongly disagree", "Somewhat inconvenient" = "Disagree", "Somewhat convenient" = "Agree", "Very convenient" = "Strongly agree"),
+                  fun = dplyr::recode(fun, "Very boring" = "Strongly disagree", "Somewhat boring" = "Disagree", "Somewhat fun" = "Agree", "Very fun" = "Strongly agree"),
+                  social = dplyr::recode(social, "Very lonely" = "Strongly disagree", "Somewhat lonely" = "Disagree", "Somewhat social" = "Agree", "Very social" = "Strongly agree"),
+                  indulgent = dplyr::recode(indulgent, "Very depriving" = "Strongly disagree", "Somewhat depriving" = "Disagree", "Somewhat indulgent" = "Agree", "Very indulgent" = "Strongly agree") ) %>% filter(!is.na(group))
+
+exercise_all%>% gglikert(., `easy`:`indulgent`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+exercise_all <- exercise_all %>%  
+  dplyr::rename("Exercising is easy" = easy) %>%
+  dplyr::rename("Exercising is relaxing" = relaxing) %>%
+  dplyr::rename("Exercising is social" = social) %>%
+  dplyr::rename("Exercising is indulgent" = indulgent) %>%
+  dplyr::rename("Exercising is pleasurable" = pleasurable) %>%
+  dplyr::rename("Exercising is convenient" = convenient) %>%
+  dplyr::rename("Exercising is fun" = fun)
+
+exercise_all%>% gglikert(., `Exercising is easy`:`Exercising is indulgent`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+```
+
+
+# Adequacy of activity mindset 
+
+## First response, comparison 1
+
+```{r}
+kable(FreqWPerc(US_1stWide, unhealthy, group), caption = "My current level of physical activity is unhealthy.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, weight, group), caption = "My current level of physical activity is helping me achieve or maintain a healthy body weight.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, beneficial, group), caption = "How harmful/beneficial is your current level of physical activity for your health?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, disease, group), caption = "How much does your current level of physical (in-)activity increase or decrease your risk of disease?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, muscles, group), caption = "How much is your current level of physical (in-)activity strengthening or weakening your muscles?") %>% kable_styling(full_width = TRUE)
+```
+
+## Figures
+
+```{r}
+#1100 x 160 svg
+US_1stWide %>% dplyr::select(unhealthy, group)  %>% filter(!is.na(unhealthy)) %>% dplyr::rename("My current level of physical activity is unhealthy." = unhealthy) %>% gglikert(., `My current level of physical activity is unhealthy.`, facet_cols = vars(group), add_labels = FALSE) 
+
+US_1stWide %>% dplyr::select(disease, group) %>% filter(!is.na(disease))  %>% dplyr::rename("	How much does your current level of physical (in-)activity increase or decrease your risk of disease?" = disease) %>% gglikert(., `	How much does your current level of physical (in-)activity increase or decrease your risk of disease?`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+US_1stWide %>% dplyr::select(weight, group) %>% filter(!is.na(weight))  %>% dplyr::rename("My current level of physical activity is helping me achieve or maintain a healthy body weight." = weight) %>% gglikert(., `My current level of physical activity is helping me achieve or maintain a healthy body weight.`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+US_1stWide %>% dplyr::select(beneficial, group) %>% filter(!is.na(beneficial))  %>% dplyr::rename("How harmful/beneficial is your current level of physical activity for your health?" = beneficial) %>% gglikert(., `How harmful/beneficial is your current level of physical activity for your health?`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+
+US_1stWide %>% dplyr::select(muscles, group) %>% filter(!is.na(muscles))  %>% dplyr::rename("How much is your current level of physical (in-)activity strengthening or weakening your muscles?" = muscles) %>% gglikert(., `How much is your current level of physical (in-)activity strengthening or weakening your muscles?`, facet_cols = vars(group), add_labels = FALSE)  + geom_vline(xintercept = 0)
+
+US_1stWide %>% dplyr::select(unhealthy, weight, group)  %>% filter(!is.na(unhealthy)) %>% dplyr::rename("My current level of physical activity is unhealthy." = unhealthy)  %>% dplyr::rename("My current level of physical activity is helping me achieve or maintain a healthy body weight." = weight) %>% gglikert(., `My current level of physical activity is unhealthy.`:`My current level of physical activity is helping me achieve or maintain a healthy body weight.`, facet_cols = vars(group), add_labels = FALSE) + geom_vline(xintercept = 0)
+```
+
+
+# ACTIVITY AND SLEEP SURVEY
+
+## First response, comparison 1
+
+```{r}
+kable(FreqWPerc(US_1stWide, work, group), caption = "Do you do regular work?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, atwork, group), caption = "Work Time Activity.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, phys_activity, group), caption = "Leisure Time Activity.") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, moderate_act, group), caption = "Overall, how many minutes of moderate activity do you get in a week?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, vigorous_act, group), caption = "Overall, how many minutes of vigorous activity do you get in a week?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sleep_time1, group), caption = "How much sleep do you usually get at night on weekdays or workdays?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sleep_time, group), caption = "How much sleep do think you need every night to be rested?  (in hours)") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sleep_diagnosis1, group), caption = "Have you ever been told by a doctor or other health professional that you have a sleep disorder?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sleep_diagnosis2, group), caption = "Which of the following sleep disorders apply to you? (select all that apply).") %>% kable_styling(full_width = TRUE)
+
+```
+
+```{r}
+US_1stWide %>% filter(!is.na(moderate_act)) %>% ggplot(aes(x = group, y = moderate_act, colour = group)) + geom_boxplot() + geom_jitter() + theme_minimal() +  scale_color_manual(values = c("deeppink", "cornflowerblue", "midnightblue")) + ylab("Weekly moderate activity (min)") + ggtitle("Self reported minutes of moderate activity")
+
+US_1stWide %>% filter(!is.na(vigorous_act)) %>% ggplot(aes(x = group, y = vigorous_act, colour = group)) + geom_boxplot() + geom_jitter() + theme_minimal() +  scale_color_manual(values = c("deeppink", "cornflowerblue", "midnightblue")) + ylab("Weekly vigorous activity (min)") + ggtitle("Self reported minutes of vigorous activity")
+
+US_1stWide %>% filter(!is.na(sleep_time)) %>% ggplot(aes(x = group, y = sleep_time, colour = group)) + geom_boxplot() + geom_jitter() + theme_minimal() + ylab("Required sleep (hours)") + ggtitle("How much sleep do think you need every night to be rested?") + scale_color_manual(values = c("deeppink", "cornflowerblue", "midnightblue")) + theme(legend.title = element_blank())
+
+US_1stWide %>% filter(!is.na(sleep_time1)) %>% ggplot(aes(x = group, y = sleep_time1, colour = group)) + geom_boxplot() + geom_jitter() + theme_minimal()  + ylab("Self reported weeknight sleep") + ggtitle("How much sleep do you usually get at night on weekdays or workdays?")+ scale_color_manual(values = c("deeppink", "cornflowerblue", "midnightblue"))+ theme(legend.title = element_blank())
+```
+
+# Risk Factor Survey
+
+## First response, comparison 1
+
+```{r}
+kable(FreqWPerc(US_1stWide, family_history, group), caption = "Do you have a family history of early heart disease?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, medications_to_treat, group), caption = "Do you take medications to treat the following risk factors (indicate all that apply)") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, heart_disease, group), caption = "Have you been diagnosed with any of the below diseases?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, vascular, group), caption = "Which vascular disease diagnosis have you received?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, ethnicity, group), caption = "Are you Spanish/Hispanic/Lation? Choose the best answer. ") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, race, group), caption = "What is your race? Choose one or more races to indicate what you consider yourself to be. ") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, education, group), caption = "What is the highest grade in school you finished? Choose the best answer. NB 1st answer only, NOT highest achieved") %>% kable_styling(full_width = TRUE)
+```
+
+# Satisfaction Survey
+
+## First response, comparison 1
+
+```{r}
+kable(FreqWPerc(US_1stWide, satisfiedwith_life, group), caption = "Overall, how satisfied are you with life as a whole these days?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, feel_worthwhile1, group), caption = "Overall, to what extent do you feel the things you do in your life are worthwhile?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, feel_worthwhile2, group), caption = "How about happy?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, feel_worthwhile3, group), caption = "How about worried?") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, feel_worthwhile4, group), caption = "How about depressed?") %>% kable_styling(full_width = TRUE)
+```
+
+```{r}
+kable(FreqWPerc(US_1stWide, riskfactors1, group), caption = "Over the next 10 years how likely do you think it is that you personally will have a heart attack, stroke, or die due to cardiovascular disease? (choose one)") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, riskfactors2, group), caption = "Over the next 10 years, compared to others your age and sex, how would you rate your risk of having a heart attack, stroke, or dying due to cardiovascular disease? (choose one)") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, riskfactors3, group), caption = "Over your lifetime how likely do you think it is that you personally will have a heart attack, stroke, or die due to cardiovascular disease? (choose one)") %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, riskfactors4, group), caption = "Over your lifetime, compared to others your age and sex, how would you rate your risk of having a heart attack, stroke, or dying due to cardiovascular disease? (choose one)") %>% kable_styling(full_width = TRUE)
+```
+
+# Par-Q Quiz
+
+## First response, comparison 1
+
+```{r}
+hc <- FreqWPerc(US_1stWide, heartCondition, group) %>% as.data.frame()
+cp <-  FreqWPerc(US_1stWide, chestPain, group) %>% as.data.frame()
+cpim <- FreqWPerc(US_1stWide, chestPainInLastMonth, group) %>% as.data.frame()
+d <- FreqWPerc(US_1stWide, dizziness, group) %>% as.data.frame()
+jp <- FreqWPerc(US_1stWide, jointProblem, group) %>% as.data.frame()
+pc <- FreqWPerc(US_1stWide, physicallyCapable, group) %>% as.data.frame()
+pd <- FreqWPerc(US_1stWide, prescriptionDrugs, group) %>% as.data.frame()
+
+kable(hc, caption = "has your doctor ever said that you have a heart condition and that you should only do physical activity recommended by a doctor? ") %>% kable_styling(full_width = TRUE)
+
+kable(cp, caption = "Do you feel pain in your chest when you do physical activity?") %>% kable_styling(full_width = TRUE)
+
+kable(cpim, caption = "In the past month, have you had chest pain when you were not doing physical activity? ") %>% kable_styling(full_width = TRUE)
+
+kable(d, caption = "Do you lose your balanced because of dizziness or do you ever lose consciousness? ") %>% kable_styling(full_width = TRUE)
+
+kable(jp, caption = "Do you have a bone or joint problem that could be made worse by a change in your physical activity? ") %>% kable_styling(full_width = TRUE)
+
+kable(pc, caption = "Do you know of any reason why you should not do physical activity? ") %>% kable_styling(full_width = TRUE)
+
+kable(pd, caption = "Is your doctor currently prescribing drugs (for example water pills) for your blood pressure or heart condition? ") %>% kable_styling(full_width = TRUE)
+
+```
+
+```{r}
+hc1 <- hc %>% pivot_longer(cols = !group) %>% mutate(q = "Has your doctor ever said that you have a heart condition \n and that you should only do physical activity recommended by a doctor?")
+cp1 <- cp %>% pivot_longer(cols = !group) %>% mutate(q = "Do you feel pain in your chest when you do physical activity?")
+cpim1 <- cpim %>% pivot_longer(cols = !group) %>% mutate(q = "In the past month, have you had chest pain when you were not doing physical activity?")
+d1 <- d %>% pivot_longer(cols = !group) %>% mutate(q = "Do you lose your balanced because of dizziness or do you ever lose consciousness?")
+jp1 <- jp %>% pivot_longer(cols = !group) %>% mutate(q = "Do you have a bone or joint problem that could be made worse by a change in your physical activity?")
+pc1 <- pc %>% pivot_longer(cols = !group) %>% mutate(q = "Do you know of any reason why you should not do physical activity?")
+pd1 <- pd %>% pivot_longer(cols = !group) %>% mutate(q = "Is your doctor currently prescribing drugs (for example water pills) for your blood pressure or heart condition?")
+
+a <- rbind(hc1, cp1, cpim1, d1, jp1, pc1, pd1) 
+a[c("value", "n")] <- str_split_fixed(a$value, '%', 2)
+a <- a %>% mutate(value = as.numeric(value)) 
+
+ggplot(data =a, aes(x = group, y = value, group = name, fill = name)) + geom_col() + facet_wrap(~q, ncol = 1) + scale_fill_manual(values = c("deeppink", "midnightblue")) + labs(x = "", y = "% answer")
+```
+
+# Diet
+
+(None normally distributed)
+
+```{r}
+Dietvars <- QuestionKey[QuestionKey$Sheet == "CARDIO DIET SURVEY", 2:3]
+
+kable(FreqWPerc(US_1stWide, fruit, group), caption = "How many cups of fruit do you eat in an average day?") %>% kable_styling(full_width = TRUE)
+
+US_1stWide %>% group_by(group) %>% summarise(`mean fruit portions` = mean(fruit, na.rm = TRUE), `sd fruit portions` = sd(fruit, na.rm = TRUE), `median fruit portions` = median(fruit, na.rm = TRUE), `IQR fruit portions` = IQR(fruit, na.rm = TRUE) ) %>% kable(.) %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, vegetable, group), caption = "How many cups of vegetables do you eat in an average day?") %>% kable_styling(full_width = TRUE)
+
+US_1stWide %>% group_by(group) %>% summarise(`mean veg portions` = mean(vegetable, na.rm = TRUE), `sd veg portions` = sd(vegetable, na.rm = TRUE), `median veg portions` = median(vegetable, na.rm = TRUE), `IQR veg portions` = IQR(vegetable, na.rm = TRUE) ) %>% kable(.) %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, fish, group), caption = "How many servings of fish do you eat on an average week?") %>% kable_styling(full_width = TRUE)
+
+US_1stWide %>% group_by(group) %>% summarise(`mean fish portions` = mean(fish, na.rm = TRUE), `sd fish portions` = sd(fish, na.rm = TRUE), `median fish portions` = median(fish, na.rm = TRUE), `IQR fish portions` = IQR(fish, na.rm = TRUE) ) %>% kable(.) %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, grains, group), caption = "How many servings of whole grains do you eat on an average day?") %>% kable_styling(full_width = TRUE)
+
+US_1stWide %>% group_by(group) %>% summarise(`mean grains portions` = mean(grains, na.rm = TRUE), `sd grains portions` = sd(grains, na.rm = TRUE), `median grains portions` = median(grains, na.rm = TRUE), `IQR grains portions` = IQR(grains, na.rm = TRUE) ) %>% kable(.) %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sugar_drinks, group), caption = "How many beverages with added sugar do you drink every week?") %>% kable_styling(full_width = TRUE)
+
+US_1stWide %>% group_by(group) %>% summarise(`mean sugar drinks` = mean(sugar_drinks, na.rm = TRUE), `sd sugar drinks` = sd(sugar_drinks, na.rm = TRUE), `median sugar drinks` = median(sugar_drinks, na.rm = TRUE), `IQR sugar drinks` = IQR(sugar_drinks, na.rm = TRUE) ) %>% kable(.) %>% kable_styling(full_width = TRUE)
+
+kable(FreqWPerc(US_1stWide, sodium, group), caption = "Select the statements that apply to you:") %>% kable_styling(full_width = TRUE)
+
+```
+
+
+```{r}
+food_portions <- US_1stWide %>% dplyr::select(healthCode, group, fruit, vegetable, grains, fish, sugar_drinks) %>% pivot_longer(cols = !c("group", "healthCode"))
+
+# Calculate mean values for each group within each facet
+mean_data_food <- food_portions %>%
+  group_by(name, group) %>%
+  summarize(mean_value = mean(value, na.rm = TRUE), .groups = 'drop') %>% mutate(name = dplyr:::recode(name, "fruit" = "How many cups of fruit do you eat in an average day? (pval = 0.0031)", "vegetable" = "How many cups of vegetables do you eat in an average day? (pval = 0.0368)", "fish" = "How many servings of fish do you eat on an average week? (pval = 0.7728)", "grains" = "How many servings of whole grains do you eat on an average day? (pval = 0.1153)", "sugar_drinks" = "How many beverages with added sugar do you drink every week? (pval = 0.0007)") )
+
+food_portions <- food_portions %>%  mutate(B = ifelse(name == "sugar_drinks", "B", "A")) %>% mutate(name = dplyr:::recode(name, "fruit" = "How many cups of fruit do you eat in an average day? (pval = 0.0031)", "vegetable" = "How many cups of vegetables do you eat in an average day? (pval = 0.0368)", "fish" = "How many servings of fish do you eat on an average week? (pval = 0.7728)", "grains" = "How many servings of whole grains do you eat on an average day? (pval = 0.1153)", "sugar_drinks" = "How many beverages with added sugar do you drink every week? (pval = 0.0007)") )
+
+food_portions %>% ggplot(aes(x = value, y = group, fill = group)) + geom_col() + facet_wrap(~name, ncol = 1, scales = "free_x") + theme_minimal() + scale_fill_manual(values = c("deeppink", "cornflowerblue", "midnightblue")) + theme(legend.position="none") + labs(y = "")
+
+mean_data_food %>% ggplot(aes(x = mean_value, y = group, fill = group)) + geom_col() + facet_wrap(~name, ncol = 1, scales = "free_x") + theme_minimal() + scale_fill_manual(values = c("deeppink", "cornflowerblue", "midnightblue")) + theme(legend.position="none") + labs(y = "")
+```
+
+# Smoking 
+
+All smoking/vaping/smokeless
+
+```{r}
+kable(FreqWPerc(US_1stWide, current_nicotine, group), caption = "Do you currently use smoke / vape / use smokeless products?") %>% kable_styling(full_width = TRUE)
+
+smk<- FreqWPerc(US_1stWide, current_nicotine, group) %>% as.data.frame() %>% pivot_longer(cols = c(`TRUE`, `FALSE`))
+smk[c("value", "n")] <- str_split_fixed(smk$value, '%', 2)
+smk <- smk %>% mutate(value = as.numeric(value))
+smk %>% ggplot(aes(x = group, y = value, fill = name)) + geom_col() + scale_fill_manual(values = c("deeppink", "midnightblue")) + theme_minimal() + labs(x = "", y = "% answer") + theme(legend.title = element_blank()) + ggtitle("Current percentage of smokers / vapers (-pvalue 0.2394)")
+
+fish_currentsmoke <- fisher.test(US_1stWide$current_nicotine, US_1stWide$group) 
+fish_currentsmoke
+```
+
+
+
+
+
+
+
